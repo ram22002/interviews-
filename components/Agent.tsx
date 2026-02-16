@@ -41,6 +41,7 @@ const Agent = ({
     };
 
     const onCallEnd = () => {
+      console.log("Call has ended");
       setCallStatus(CallStatus.FINISHED);
     };
 
@@ -107,6 +108,7 @@ const Agent = ({
 
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
+        console.log("Generation call finished. No saving logic implemented yet.");
         router.push("/");
       } else {
         handleGenerateFeedback(messages);
@@ -118,12 +120,24 @@ const Agent = ({
     setCallStatus(CallStatus.CONNECTING);
 
     if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-        variableValues: {
-          username: userName,
-          userid: userId,
-        },
-      });
+      console.log("Starting Vapi call with Workflow ID:", process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID);
+      
+      try {
+        await vapi.start({
+          model: {
+            provider: "vapi",
+            model: "gpt-3.5-turbo", // Placeholder model name to satisfy SDK type
+            workflowId: process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,
+          },
+        } as any, {
+          variableValues: {
+            username: userName,
+            userid: userId,
+          },
+        });
+      } catch (err) {
+        console.error("Vapi Start Error:", JSON.stringify(err, null, 2));
+      }
     } else {
       let formattedQuestions = "";
       if (questions) {
